@@ -4,6 +4,8 @@ const bcrypt=require("bcrypt")
 const cors=require("cors")
 const jwt=require("jsonwebtoken")
 const {usermodel}=require("./models/users")
+const {datasmodel}=require("./models/data")
+
 
 
 
@@ -101,6 +103,24 @@ app.post("/search",(req,res)=>{
                 }
             )
         })
+
+app.get("/get/:id", (req, res) => {
+    const id = req.params.id;
+    datasmodel.findById(id)
+        .then(note => {
+            if (note) res.json(note);
+            else res.status(404).json({ status: "Not Found" });
+        })
+        .catch(err => res.status(500).json({ status: "Error", message: err.message }));
+});
+
+
+app.post("/edit", (req, res) => {
+    const input = req.body;
+    datasmodel.findByIdAndUpdate(input._id, input, { new: true })
+        .then(updatedNote => res.json({ status: "Success", data: updatedNote }))
+        .catch(err => res.status(500).json({ status: "Error", message: err.message }));
+});
 
 
   app.listen(8080,()=>{
