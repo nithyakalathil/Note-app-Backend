@@ -69,6 +69,15 @@ app.use("/signup",async (req,res)=>{
         res.json({status:"Success"})
     })
 
+
+app.post("/add",(req,res)=>{
+    let input=req.body
+    let contact=new datasmodel(input)
+    contact.save()
+    console.log(contact)
+    res.json({status:"Success"})
+})
+
   app.listen(8080,()=>{
         console.log("server started")
     })
