@@ -78,6 +78,11 @@ app.post("/add",(req,res)=>{
     res.json({status:"Success"})
 })
 
+ app.get("/view",(req,res)=>{
+    datasmodel.find().sort({ _id: -1 }).then((data)=>{
+        res.json(data)
+    })
+})
 
 app.post("/search",(req,res)=>{
             let input=req.body
