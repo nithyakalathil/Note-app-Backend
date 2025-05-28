@@ -78,6 +78,16 @@ app.post("/add",(req,res)=>{
     res.json({status:"Success"})
 })
 
+
+app.post("/search",(req,res)=>{
+            let input=req.body
+        
+            datasmodel.find(input).then((data)=>{
+                res.json(data)
+            })
+        })
+
+
   app.listen(8080,()=>{
         console.log("server started")
     })
