@@ -24,6 +24,38 @@ const generateHashedPassword = async(password)=>{
 }
 
 
+app.post("/signin",(req,res)=>{
+   
+    let input = req.body
+    usermodel.find({"email":req.body.email}).then( 
+        (response)=>{
+            if (response.length>0) {
+                let dbpassword=response[0].password
+                console.log(dbpassword)
+                bcrypt.compare(input.password,dbpassword,(error,isMatch)=>{
+                    if (isMatch) {
+                       
+jwt.sign({email:input.email},"Demo-app",{expiresIn:"1d"},
+    (error,token)=>{
+        if (error) {
+            res.json({status:"unable to create tocken"})
+        } else {
+            res.json({status:"Success","userid":response[0]._id,"token":token})
+        }
+
+})
+
+                    } else {
+                        res.json({status:"incorect"})
+                    }
+                })
+            } else {
+                res.json({status:"not exist"})
+            }
+        }
+    ).catch()
+})
+
 
 app.use("/signup",async (req,res)=>{
     let input=req.body
