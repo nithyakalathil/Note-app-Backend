@@ -3,6 +3,9 @@ const mongoose=require("mongoose")
 const bcrypt=require("bcrypt")
 const cors=require("cors")
 const jwt=require("jsonwebtoken")
+const {usermodel}=require("./models/users")
+const {datasmodel}=require("./models/data")
+
 
 
 
@@ -12,6 +15,112 @@ const app=express()
 app.use(cors())
 app.use(express.json())
 
+mongoose.connect("mongodb+srv://nithya:nithya913@cluster0.r7eo1il.mongodb.net/DemooDb?retryWrites=true&w=majority&appName=Cluster0")
+
+const generateHashedPassword = async(password)=>{
+ 
+    const salt=await bcrypt.genSalt(10) 
+
+    return bcrypt.hash(password,salt)
+
+}
+
+
+app.post("/signin",(req,res)=>{
+   
+    let input = req.body
+    usermodel.find({"email":req.body.email}).then( 
+        (response)=>{
+            if (response.length>0) {
+                let dbpassword=response[0].password
+                console.log(dbpassword)
+                bcrypt.compare(input.password,dbpassword,(error,isMatch)=>{
+                    if (isMatch) {
+                       
+jwt.sign({email:input.email},"Demo-app",{expiresIn:"1d"},
+    (error,token)=>{
+        if (error) {
+            res.json({status:"unable to create tocken"})
+        } else {
+            res.json({status:"Success","userid":response[0]._id,"token":token})
+        }
+
+})
+
+                    } else {
+                        res.json({status:"incorect"})
+                    }
+                })
+            } else {
+                res.json({status:"not exist"})
+            }
+        }
+    ).catch()
+})
+
+
+app.use("/signup",async (req,res)=>{
+    let input=req.body
+    let hasedpassword=await generateHashedPassword(input.password)
+    console.log(hasedpassword)
+    input.password=hasedpassword
+    console.log(input)
+
+    let users = new usermodel(input)
+    users.save()
+        res.json({status:"Success"})
+    })
+
+
+app.post("/add",(req,res)=>{
+    let input=req.body
+    let contact=new datasmodel(input)
+    contact.save()
+    console.log(contact)
+    res.json({status:"Success"})
+})
+
+ app.get("/view",(req,res)=>{
+    datasmodel.find().sort({ _id: -1 }).then((data)=>{
+        res.json(data)
+    })
+})
+
+app.post("/search",(req,res)=>{
+            let input=req.body
+        
+            datasmodel.find(input).then((data)=>{
+                res.json(data)
+            })
+        })
+
+
+        app.post("/delete",(req,res)=>{
+            let input=req.body
+            datasmodel.findByIdAndDelete(input._id).then(
+                (response)=>{
+                    res.json({status:"Success"})
+                }
+            )
+        })
+
+app.get("/get/:id", (req, res) => {
+    const id = req.params.id;
+    datasmodel.findById(id)
+        .then(note => {
+            if (note) res.json(note);
+            else res.status(404).json({ status: "Not Found" });
+        })
+        .catch(err => res.status(500).json({ status: "Error", message: err.message }));
+});
+
+
+app.post("/edit", (req, res) => {
+    const input = req.body;
+    datasmodel.findByIdAndUpdate(input._id, input, { new: true })
+        .then(updatedNote => res.json({ status: "Success", data: updatedNote }))
+        .catch(err => res.status(500).json({ status: "Error", message: err.message }));
+});
 
 
   app.listen(8080,()=>{
